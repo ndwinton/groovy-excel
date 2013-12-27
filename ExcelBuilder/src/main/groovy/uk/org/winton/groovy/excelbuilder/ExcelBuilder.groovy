@@ -2,6 +2,7 @@ package uk.org.winton.groovy.excelbuilder
 
 import java.util.Map;
 
+import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -15,6 +16,8 @@ class ExcelBuilder extends BuilderSupport {
 	private String nextSheetName = 'Sheet1'
 	private Sheet currentSheet
 	private int nextRowNum = 0
+	private Row currentRow
+	private int nextColNum = 0
 	
 	ExcelBuilder() {
 		workbook = new XSSFWorkbook()
@@ -52,6 +55,12 @@ class ExcelBuilder extends BuilderSupport {
 				
 			case 'sheet':
 				return createSheet([name: value])
+			
+			case 'row':
+				return createRow([cells: value])
+			
+			case 'cell':
+				return createCell([value: value])
 		}
 		throw new IllegalArgumentException("Unknown builder operation: " + name)
 	}
@@ -80,6 +89,10 @@ class ExcelBuilder extends BuilderSupport {
 			case 'sheet':
 				attributes.name = value
 				return createSheet(attributes)
+				
+			case 'cell':
+				attributes.value = value
+				return createCell(attributes)
 		}
 		throw new IllegalArgumentException("Unknown builder operation: " + name)
 	}
@@ -136,10 +149,6 @@ class ExcelBuilder extends BuilderSupport {
 			getHidden = { ->
 				workbook.isSheetHidden(index)
 			}
-			
-			getRows = { ->
-				delegate.rowIterator()
-			}
 		}
 	}
 	
@@ -147,7 +156,33 @@ class ExcelBuilder extends BuilderSupport {
 		if (currentSheet == null) {
 			throw new IllegalArgumentException("row can't be created without a previously defined sheet")
 		}
-		return currentSheet.createRow(nextRowNum++)
+		nextColNum = 0
+		currentRow = currentSheet.createRow(nextRowNum++)
+		attributes.cells?.each { value ->
+			createCell([value: value])
+		}
+		currentRow
 	}
 
+	private Cell createCell(Map attributes) {
+		def value = attributes.value ?: ''
+		nextColNum = attributes.column != null ? attributes.column : nextColNum
+		Cell cell = currentRow.createCell(nextColNum++)
+		
+		switch (value) {
+			case null:
+			case Number:
+			case Boolean:
+			case Date:
+			case Calendar:
+			case String:
+				cell.setCellValue(value)
+				break
+			
+			default:
+				cell.setCellValue(value.toString())
+				break
+		}
+		cell
+	}
 }
