@@ -1,8 +1,11 @@
 package uk.org.winton.groovy.excelbuilder
 
+import groovy.lang.Closure;
+
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -12,6 +15,7 @@ class ExcelBuilder extends BuilderSupport {
 
 	final Workbook workbook
 	final Map<String, Sheet> sheets = [:]
+	final Map<String, Font> fonts = [:]
 	
 	private String nextSheetName = 'Sheet1'
 	private Sheet currentSheet
@@ -61,6 +65,9 @@ class ExcelBuilder extends BuilderSupport {
 			
 			case 'cell':
 				return createCell([value: value])
+				
+			case 'font':
+				return createFont(value)
 		}
 		throw new IllegalArgumentException("Unknown builder operation: " + name + "(value)")
 	}
@@ -107,6 +114,16 @@ class ExcelBuilder extends BuilderSupport {
 	@Override
 	protected void nodeCompleted(Object parent, Object node) {
 		println("nodeCompleted($parent, $node)")
+	}
+	
+	@Override
+	protected void setClosureDelegate(Closure closure, Object node) {
+		if (node instanceof Font) {
+			closure.setDelegate(node)
+		}
+		else {
+			closure.setDelegate(this);
+		}
 	}
 	
 	private Sheet createSheet(Map attributes) {
@@ -201,5 +218,31 @@ class ExcelBuilder extends BuilderSupport {
 				break
 		}
 		cell
+	}
+	
+	private Font createFont(name) {
+		fonts[name] = workbook.createFont()
+		enrichFontMetaClass(fonts[name])
+		fonts[name]
+	}
+	
+	private void enrichFontMetaClass(font) {		
+		font.metaClass {
+			setBold = { boolean bold ->
+				setBoldweight(bold ? Font.BOLDWEIGHT_BOLD : Font.BOLDWEIGHT_NORMAL)
+			}
+			
+			getBold = { ->
+				getBoldweight() == Font.BOLDWEIGHT_BOLD
+			}
+			
+			setFontHeightInPoints = { Number height ->
+				setFontHeight((height * 20) as short)
+			}
+			
+			getFontHeightInPoints = { ->
+				getFontHeight() / 20.0
+			}
+		}
 	}
 }

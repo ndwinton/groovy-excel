@@ -3,6 +3,7 @@ package uk.org.winton.groovy.excelbuilder;
 import static org.junit.Assert.*;
 
 import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 
@@ -346,6 +347,58 @@ class ExcelBuilderTest {
 		assert r2.rowNum == 3
 		assert r3.rowNum == 1
 		assert r4.rowNum == 2
+	}
+	
+	@Test
+	public void shouldBeAbleToDefineANamedFont() {
+		Font f
+		builder {
+			font('italic') {
+				italic = true 
+			}
+		}
+		assert builder.fonts['italic'].italic
+	}
+	
+	@Test
+	public void shouldBeAbleToCreateDefineANamedFontWithAllStandardAttributes() {
+		builder {
+			font('everything') {
+				boldweight = Font.BOLDWEIGHT_BOLD
+				charSet = Font.ANSI_CHARSET
+				color = Font.COLOR_RED
+				fontHeightInPoints = 12 as short
+				fontName = 'Arial'
+				italic = true
+				strikeout = true
+				typeOffset = Font.SS_SUPER
+				underline = Font.U_SINGLE
+			}
+		}
+		Font f = builder.fonts['everything']
+		assert f.boldweight == Font.BOLDWEIGHT_BOLD
+		assert f.color == Font.COLOR_RED
+		assert f.fontHeight == (12 * 20)
+		assert f.fontName == 'Arial'
+		assert f.italic
+		assert f.strikeout
+		assert f.typeOffset == Font.SS_SUPER
+		assert f.underline == Font.U_SINGLE
+	}
+	
+	@Test
+	public void shouldBeAbleToCreateDefineANamedFontWithOverloadedAttributes() {
+		builder {
+			font('everything') {
+				bold = true
+				fontHeightInPoints = 12.5
+			}
+		}
+		Font f = builder.fonts['everything']
+		assert f.bold
+		assert f.boldweight == Font.BOLDWEIGHT_BOLD
+		assert f.fontHeight == (12.5 * 20)
+		assert f.fontHeightInPoints == 12.5
 	}
 	
 }
