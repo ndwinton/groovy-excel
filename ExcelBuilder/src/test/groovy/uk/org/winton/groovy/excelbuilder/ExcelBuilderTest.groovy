@@ -304,4 +304,48 @@ class ExcelBuilderTest {
 		assert cells[5].getBooleanCellValue() == true
 		assert cells[6].getDateCellValue() == now
 	}
+	
+	@Test
+	public void shouldBeAbleToCreateACellWithExplicitPositionAndValue() {
+		Cell c
+		builder {
+			sheet {
+				c = cell(row: 2, column: 10, value: 42)
+			}
+		}
+		assert c.rowIndex == 2
+		assert c.columnIndex == 10
+		assert c.getNumericCellValue() == 42
+	}
+	
+	@Test
+	public void shouldBeAbleToCreateACellWithExplicitPositionInAnExistingRow() {
+		Row r
+		builder {
+			sheet {
+				r = row([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+					cell(row: 0, column: 5, value: 42)
+				}
+			}
+		}
+		assert r.collect { it.getNumericCellValue() } == [1, 2, 3, 4, 5, 42, 7, 8, 9, 10]
+	}
+	
+	@Test
+	public void shouldBeAbleToCreateRowAtAnExplicitPosition() {
+		Row r1, r2, r3, r4
+		builder {
+			sheet {
+				r1 = row([1, 2, 3])
+				r2 = row([4, 5, 6], row: 3)
+				r3 = row([7, 8, 9], row: 1)
+				r4 = row(['a', 'b', 'c'])
+			}
+		}
+		assert r1.rowNum == 0
+		assert r2.rowNum == 3
+		assert r3.rowNum == 1
+		assert r4.rowNum == 2
+	}
+	
 }

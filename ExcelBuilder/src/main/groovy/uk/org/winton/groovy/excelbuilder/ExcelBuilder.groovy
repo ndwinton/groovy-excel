@@ -44,7 +44,7 @@ class ExcelBuilder extends BuilderSupport {
 			case 'row':
 				return createRow([:])
 		}
-		throw new IllegalArgumentException("Unknown builder operation: " + name)
+		throw new IllegalArgumentException("Unknown builder operation: " + name + "()")
 	}
 
 	@Override
@@ -62,7 +62,7 @@ class ExcelBuilder extends BuilderSupport {
 			case 'cell':
 				return createCell([value: value])
 		}
-		throw new IllegalArgumentException("Unknown builder operation: " + name)
+		throw new IllegalArgumentException("Unknown builder operation: " + name + "(value)")
 	}
 
 	@Override
@@ -76,8 +76,11 @@ class ExcelBuilder extends BuilderSupport {
 			
 			case 'row':
 				return createRow(attributes)
+				
+			case 'cell':
+				return createCell(attributes)
 		}
-		throw new IllegalArgumentException("Unknown builder operation: " + name)
+		throw new IllegalArgumentException("Unknown builder operation: " + name + "(attributes...)")
 	}
 
 	@Override
@@ -90,11 +93,15 @@ class ExcelBuilder extends BuilderSupport {
 				attributes.name = value
 				return createSheet(attributes)
 				
+			case 'row':
+				attributes.cells = value
+				return createRow(attributes)
+				
 			case 'cell':
 				attributes.value = value
 				return createCell(attributes)
 		}
-		throw new IllegalArgumentException("Unknown builder operation: " + name)
+		throw new IllegalArgumentException("Unknown builder operation: " + name + "(value, attributes...)")
 	}
 
 	@Override
@@ -157,17 +164,27 @@ class ExcelBuilder extends BuilderSupport {
 			throw new IllegalArgumentException("row can't be created without a previously defined sheet")
 		}
 		nextColNum = 0
-		currentRow = currentSheet.createRow(nextRowNum++)
+		if (attributes.row != null) {
+			nextRowNum = attributes.row
+		}
+		currentRow = findOrCreateRow(nextRowNum++)
 		attributes.cells?.each { value ->
 			createCell([value: value])
 		}
 		currentRow
 	}
 
+	private Row findOrCreateRow(rowNum) {
+		currentSheet.getRow(rowNum) ?: currentSheet.createRow(rowNum)
+	}
+	
 	private Cell createCell(Map attributes) {
 		def value = attributes.value ?: ''
+		if (attributes.row != null) {
+			createRow([row: attributes.row])
+		}
 		nextColNum = attributes.column != null ? attributes.column : nextColNum
-		Cell cell = currentRow.createCell(nextColNum++)
+		Cell cell = currentRow.getCell(nextColNum++, Row.CREATE_NULL_AS_BLANK)
 		
 		switch (value) {
 			case null:
