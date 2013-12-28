@@ -3,7 +3,9 @@ package uk.org.winton.groovy.excelbuilder;
 import static org.junit.Assert.*;
 
 import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 
@@ -353,15 +355,16 @@ class ExcelBuilderTest {
 	public void shouldBeAbleToDefineANamedFont() {
 		Font f
 		builder {
-			font('italic') {
+			f = font('italic') {
 				italic = true 
 			}
 		}
+		assert f.italic
 		assert builder.fonts['italic'].italic
 	}
 	
 	@Test
-	public void shouldBeAbleToCreateDefineANamedFontWithAllStandardAttributes() {
+	public void shouldBeAbleToDefineNamedFontWithAllStandardAttributes() {
 		builder {
 			font('everything') {
 				boldweight = Font.BOLDWEIGHT_BOLD
@@ -387,7 +390,7 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
-	public void shouldBeAbleToCreateDefineANamedFontWithOverloadedAttributes() {
+	public void shouldBeAbleToDefineNamedFontWithMetaClassAttributes() {
 		builder {
 			font('everything') {
 				bold = true
@@ -401,4 +404,90 @@ class ExcelBuilderTest {
 		assert f.fontHeightInPoints == 12.5
 	}
 	
+	@Test
+	public void shouldBeAbleToDefineNamedStyle() {
+		def s
+		builder {
+			s = style('style1')
+		}
+		assert s instanceof CellStyle
+		assert builder.styles['style1']
+	}
+	
+	@Test
+	public void shouldBeAbleToDefineNamedStyleWithAllStandardAttributes() {
+		CellStyle s
+		builder {
+			font('bold') {
+				bold = true
+			}
+			
+			s = style('omnistyle') {
+				alignment = CellStyle.ALIGN_CENTER
+				borderBottom = CellStyle.BORDER_DASH_DOT
+				borderLeft = CellStyle.BORDER_DASHED
+				borderRight = CellStyle.BORDER_DOTTED
+				borderTop = CellStyle.BORDER_MEDIUM
+				bottomBorderColor = IndexedColors.AQUA.index
+				// dataFormat - handled in overloaded section
+				fillForegroundColor = IndexedColors.BLACK.index	// Set FG before BG according to docs
+				fillBackgroundColor = IndexedColors.BLUE.index
+				fillPattern = CellStyle.BIG_SPOTS
+				font = builder.fonts['bold']
+				hidden = true
+				indention = 2
+				leftBorderColor = IndexedColors.BLUE_GREY.index
+				locked = true
+				rightBorderColor = IndexedColors.BRIGHT_GREEN.index
+				rotation = 90
+				// shrinkToFit = true // Not supported?
+				topBorderColor = IndexedColors.BROWN.index
+				verticalAlignment = CellStyle.VERTICAL_CENTER
+				wrapText = true
+			}
+		}
+
+		s.with {
+			assert alignment == CellStyle.ALIGN_CENTER
+			assert borderBottom == CellStyle.BORDER_DASH_DOT
+			assert borderLeft == CellStyle.BORDER_DASHED
+			assert borderRight == CellStyle.BORDER_DOTTED
+			assert borderTop == CellStyle.BORDER_MEDIUM
+			assert bottomBorderColor == IndexedColors.AQUA.index
+			// dataFormat - handled in overloaded section
+			assert fillForegroundColor == IndexedColors.BLACK.index	// Set FG before BG according to docs
+			assert fillBackgroundColor == IndexedColors.BLUE.index
+			assert fillPattern == CellStyle.BIG_SPOTS
+			assert font == builder.fonts['bold']
+			assert fontIndex == builder.fonts['bold'].index
+			assert hidden
+			assert indention == 2
+			assert leftBorderColor == IndexedColors.BLUE_GREY.index
+			assert locked
+			assert rightBorderColor == IndexedColors.BRIGHT_GREEN.index
+			assert rotation == 90
+			//assert shrinkToFit
+			assert topBorderColor == IndexedColors.BROWN.index
+			assert verticalAlignment == CellStyle.VERTICAL_CENTER
+			assert wrapText
+		}
+	}
+	
+	@Test
+	public void shouldBeAbleToDefineNamedStyleWithMetaClassAttributes() {
+		CellStyle s
+		builder {
+			font('bold') {
+				bold = true
+			}
+			
+			s = style('omnistyle') {
+				dataFormatString = "0.00%"
+			}
+		}
+
+		assert s.dataFormatString == "0.00%"
+		assert s.getDataFormatString() == "0.00%"
+	}
+
 }

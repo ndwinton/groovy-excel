@@ -5,7 +5,10 @@ import groovy.lang.Closure;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.DataFormat
 import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -16,6 +19,7 @@ class ExcelBuilder extends BuilderSupport {
 	final Workbook workbook
 	final Map<String, Sheet> sheets = [:]
 	final Map<String, Font> fonts = [:]
+	final Map<String, CellStyle> styles = [:]
 	
 	private String nextSheetName = 'Sheet1'
 	private Sheet currentSheet
@@ -68,6 +72,9 @@ class ExcelBuilder extends BuilderSupport {
 				
 			case 'font':
 				return createFont(value)
+
+			case 'style':
+				return createStyle(value)
 		}
 		throw new IllegalArgumentException("Unknown builder operation: " + name + "(value)")
 	}
@@ -118,11 +125,15 @@ class ExcelBuilder extends BuilderSupport {
 	
 	@Override
 	protected void setClosureDelegate(Closure closure, Object node) {
-		if (node instanceof Font) {
-			closure.setDelegate(node)
-		}
-		else {
-			closure.setDelegate(this);
+		switch (node) {
+			case Font:
+			case CellStyle:
+				closure.setDelegate(node)
+				break
+			
+			default:
+				closure.setDelegate(this)
+				break
 		}
 	}
 	
@@ -245,4 +256,23 @@ class ExcelBuilder extends BuilderSupport {
 			}
 		}
 	}
+	
+	private CellStyle createStyle(name) {
+		styles[name] = workbook.createCellStyle()
+		enrichCellStyleMetaClass(styles[name])
+		styles[name]
+	}
+	
+	private void enrichCellStyleMetaClass(style) {
+		style.metaClass {
+			setDataFormatString = { String s ->
+				DataFormat fmt = workbook.creationHelper.createDataFormat()
+				delegate.setDataFormat(fmt.getFormat(s))
+			}
+			
+			getDataFormatString = { ->
+				delegate.getDataFormatString()
+			}
+		}
+	}	
 }
