@@ -490,4 +490,31 @@ class ExcelBuilderTest {
 		assert s.getDataFormatString() == "0.00%"
 	}
 
+	@Test
+	public void fontDefinitionsShouldCreateMatchingStyles() {
+		Font f
+		builder {
+			f = font('bold') {
+				bold = true
+			}
+		}
+		assert builder.styles['bold'].font == f
+	}
+	
+	@Test
+	public void fontDefinitionShouldNotOverrideExistingStyle() {
+		Font f
+		builder {
+			style('foo')
+			f = font('foo') {
+				italic = true
+			}
+		}
+		assert builder.styles['foo'].font != f 
+	}
+	
+	@Test
+	public void shouldBeAbleToApplyStyleToACell() {
+		
+	}
 }
