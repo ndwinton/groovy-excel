@@ -1,4 +1,4 @@
-# ExcelBuilder - A Groovy Builder for Excel Spreadsheets
+## ExcelBuilder - A Groovy Builder for Excel Spreadsheets
 
 This provides a builder-style interface for creating Excel (2007+ format) spreadsheets using the Apache POI library.
 
