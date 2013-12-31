@@ -1,0 +1,57 @@
+package uk.org.winton.groovy.excelbuilder;
+
+import static org.junit.Assert.*
+
+import javax.swing.text.StyledEditorKit.BoldAction;
+
+import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.junit.Before
+import org.junit.Test
+
+class FontEnhancerTest {
+	Workbook wb
+	Font f1, f2
+	
+	@Before
+	public void setUp() throws Exception {
+		wb = new XSSFWorkbook()
+		f1 = wb.createFont()
+		f2 = wb.createFont()
+	}
+
+	@Test
+	public void shouldBeAbleToSetBoldPropertyUsingClassAsCategory() {
+		f1.metaClass.properties.each {
+			println it.dump()
+		}
+		use (FontEnhancer) {
+			assert !f1.bold
+			assert f1.boldweight == Font.BOLDWEIGHT_NORMAL
+			f1.bold = true
+			assert f1.bold
+			assert f1.boldweight == Font.BOLDWEIGHT_BOLD
+		}
+	}
+
+	@Test
+	public void shouldBeAbleToGetAndSetTheFontHeightInPointsUsingNonShortValues() {
+		use (FontEnhancer) {
+			f1.fontHeightInPoints = 20.5
+			assert f1.fontHeightInPoints == 20.5
+			assert f1.fontHeight == 410
+			f1.fontHeightInPoints = 2000
+			assert f1.fontHeightInPoints == Short.MAX_VALUE / 20.0
+		}
+	}
+	
+	@Test
+	public void shouldBeAbleToEnhanceInstanceMetaClass() {
+		FontEnhancer.enhance(f1)
+		f1.bold = true
+		f1.fontHeightInPoints = 20.5
+		assert f1.bold
+		assert f1.fontHeightInPoints == 20.5
+	}
+}

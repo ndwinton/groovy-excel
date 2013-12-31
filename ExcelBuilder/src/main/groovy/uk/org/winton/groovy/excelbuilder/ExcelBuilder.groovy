@@ -1,5 +1,7 @@
 /**
+ * Groovy builder implementation for Excel 2007 workbooks using Apache POI.
  * 
+ * <pre>
  * Copyright (c) 2013, Neil Winton (neil@winton.org.uk)
  * All rights reserved.
  *
@@ -22,6 +24,9 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
  * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * </pre>
+ * 
+ * @author Neil Winton <neil@winton.org.uk>
  */
 
 package uk.org.winton.groovy.excelbuilder
@@ -168,51 +173,14 @@ class ExcelBuilder extends BuilderSupport {
 		def name = attributes.name
 		currentSheet = workbook.createSheet(name)
 		sheets[name] = currentSheet
-		enrichCurrentSheetMetaClass()
+		SheetEnhancer.enhance(currentSheet)
 		
 		currentSheet.active = attributes.active ?: false
 		currentSheet.hidden = attributes.hidden ?: false
 		
 		return currentSheet
 	}
-	
-	/**
-	 * Metaclass modification add:
-	 * 
-	 * hidden property (read/write)
-	 * 		Sets the sheet hidden or shown (default)
-	 * active property (read/write)
-	 * 		Makes the sheet active (and others inactive)
-	 * rows property (readonly)
-	 * 		Returns iterator for the rows within the sheet.
-	 * 		Note that the actual row number may be different from its
-	 * 		position in the sequence.
-	 */
-	private void enrichCurrentSheetMetaClass() {
-		def index = workbook.getSheetIndex(currentSheet)
-
-		// NB: 'index' is available within this closure
 		
-		currentSheet.metaClass {
-			setActive = { boolean on ->
-				if (on) {
-					workbook.setActiveSheet(index)
-				}
-			}
-			getActive = { ->
-				workbook.getActiveSheetIndex() == index
-			}
-			
-			setHidden = { boolean hide ->
-				workbook.setSheetHidden(index, hide)
-				
-			}
-			getHidden = { ->
-				workbook.isSheetHidden(index)
-			}
-		}
-	}
-	
 	private Row createRow(Map attributes) {
 		if (currentSheet == null) {
 			throw new IllegalArgumentException("row can't be created without a previously defined sheet")
@@ -259,7 +227,7 @@ class ExcelBuilder extends BuilderSupport {
 	
 	private Font createFont(name) {
 		fonts[name] = workbook.createFont()
-		enrichFontMetaClass(fonts[name])
+		FontEnhancer.enhance(fonts[name])
 		if (!styles[name]) {
 			createStyle(name)
 			styles[name].font = fonts[name]
@@ -267,42 +235,10 @@ class ExcelBuilder extends BuilderSupport {
 		fonts[name]
 	}
 	
-	private void enrichFontMetaClass(font) {		
-		font.metaClass {
-			setBold = { boolean bold ->
-				setBoldweight(bold ? Font.BOLDWEIGHT_BOLD : Font.BOLDWEIGHT_NORMAL)
-			}
-			
-			getBold = { ->
-				getBoldweight() == Font.BOLDWEIGHT_BOLD
-			}
-			
-			setFontHeightInPoints = { Number height ->
-				setFontHeight((height * 20) as short)
-			}
-			
-			getFontHeightInPoints = { ->
-				getFontHeight() / 20.0
-			}
-		}
-	}
-	
 	private CellStyle createStyle(name) {
 		styles[name] = workbook.createCellStyle()
-		enrichCellStyleMetaClass(styles[name])
+		CellStyleEnhancer.enhance(styles[name], workbook)
 		styles[name]
 	}
 	
-	private void enrichCellStyleMetaClass(style) {
-		style.metaClass {
-			setDataFormatString = { String s ->
-				DataFormat fmt = workbook.creationHelper.createDataFormat()
-				delegate.setDataFormat(fmt.getFormat(s))
-			}
-			
-			getDataFormatString = { ->
-				delegate.getDataFormatString()
-			}
-		}
-	}	
 }
