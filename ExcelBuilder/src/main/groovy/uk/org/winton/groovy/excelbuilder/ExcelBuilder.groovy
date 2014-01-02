@@ -227,7 +227,7 @@ class ExcelBuilder extends BuilderSupport {
 	
 	private Font createFont(name) {
 		fonts[name] = workbook.createFont()
-		FontEnhancer.enhance(fonts[name])
+		FontEnhancer.enhance(fonts[name], workbook)
 		if (!styles[name]) {
 			createStyle(name)
 			styles[name].font = fonts[name]

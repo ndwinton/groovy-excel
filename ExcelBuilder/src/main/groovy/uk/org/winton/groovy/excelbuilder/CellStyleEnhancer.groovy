@@ -8,11 +8,11 @@ class CellStyleEnhancer {
 	private static def workbookMap = Collections.synchronizedMap([:])
 	
 	static void setWorkbook(CellStyle self, Workbook workbook) {
-		workbookMap[self] = workbook
+		workbookMap[System.identityHashCode(self) + ":" + self.index] = workbook
 	}
 	
 	static Workbook getWorkbook(CellStyle self) {
-		workbookMap[self]
+		workbookMap[System.identityHashCode(self) + ":" + self.index]
 	}
 	
 	static void setDataFormatString(CellStyle self, String formatString) {
@@ -21,10 +21,9 @@ class CellStyleEnhancer {
 	}
 	
 	static CellStyle enhance(CellStyle style, Workbook workbook) {
-		setWorkbook(style, workbook)
 		style.metaClass {
 			getWorkbook = { ->
-				workbookMap[style]
+				workbook
 			}
 			
 			setDataFormatString = { String str ->
