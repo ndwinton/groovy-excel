@@ -33,25 +33,27 @@ class FontEnhancer {
 	}
 	
 	static Font combine(Font self, Font other) {
-		Font combined = combineWithoutSettingWorkbook(self, other)
+		Font combined = combineWithoutEnhancements(self, other)
 		combined.workbook = self.workbook
 		combined
 	}
 	
-	private static Font combineWithoutSettingWorkbook(Font self, Font other) {
+	private static Font combineWithoutEnhancements(Font self, Font other) {
 		Workbook workbook = self.workbook
 		Font base = workbook.getFontAt(0 as short)
 		def combined = [:]
-		['boldweight', 'color', 'fontHeight',
+		['boldweight', 'charSet', 'color', 'fontHeight',
 			'fontName', 'italic', 'strikeout', 'typeOffset', 'underline'].each { attr ->
 			combined[attr] = self[attr]
 			if (other[attr] != base[attr]) {
 				combined[attr] = other[attr]
 			}
 		}
-		// Magic ahead! Spread the values of the (ordered) Map over the findFont arguments
-		Font combinedFont = workbook.findFont(*(combined.collect { k, v -> v } ))
-		if (!combinedFont) {
+			
+		Font combinedFont = workbook.findFont(combined.boldweight, combined.color, combined.fontHeight,
+			combined.fontName, combined.italic, combined.strikeout, combined.typeOffset, combined.underline)
+		
+		if (!combinedFont || combined.charSet != combinedFont.charSet) {
 			combinedFont = workbook.createFont()
 			combined.each { attribute, value ->
 				combinedFont[attribute] = value
@@ -87,7 +89,7 @@ class FontEnhancer {
 			}
 			
 			combine = { Font other ->
-				enhance(FontEnhancer.combineWithoutSettingWorkbook(delegate, other), workbook)
+				enhance(FontEnhancer.combineWithoutEnhancements(delegate, other), workbook)
 			}
 		}
 		font

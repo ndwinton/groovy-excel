@@ -59,6 +59,7 @@ class FontEnhancerTest {
 			f1.bold = true
 			f1.fontName = 'Times'
 			f1.fontHeightInPoints = 12
+			f1.charSet = Font.SYMBOL_CHARSET
 			f2.italic = true
 			f2.fontName = 'Courier'
 			f3 = f1.combine(f2)
@@ -66,6 +67,7 @@ class FontEnhancerTest {
 			assert f3.fontName == 'Courier'
 			assert f3.fontHeightInPoints == 12
 			assert f3.italic
+			assert f3.charSet == Font.SYMBOL_CHARSET
 			assert f3.workbook == f1.workbook
 		}
 	}
