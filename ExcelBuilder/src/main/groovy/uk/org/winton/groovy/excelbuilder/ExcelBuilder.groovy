@@ -2,7 +2,7 @@
  * Groovy builder implementation for Excel 2007 workbooks using Apache POI.
  * 
  * <pre>
- * Copyright (c) 2013, Neil Winton (neil@winton.org.uk)
+ * Copyright (c) 2013, 2014 Neil Winton (neil@winton.org.uk)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,

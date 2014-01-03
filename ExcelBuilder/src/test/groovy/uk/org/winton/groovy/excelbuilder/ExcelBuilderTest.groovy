@@ -614,4 +614,29 @@ class ExcelBuilderTest {
 			}
 		}
 	}
+	
+	@Test
+	public void shouldBeAbleToCombineEverything() {
+		builder {
+			font('bold') {
+				bold = true
+			}
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			style('uk-date') {
+				dataFormatString = 'dd/mm/yyyy'
+			}
+			sheet {
+				row([1, 2, 'Hello'], style: 'centred') {
+					cell(column: 1, style: ['bold', 'centred'])
+				}
+				row([5, 6, 7], style: 'bold')
+				row(['Today', new Date()]) {
+					cell(column: 1, style: 'uk-date')
+				}
+			}
+		}
+		builder.workbook.write(new FileOutputStream(new File(TEST_FILE)))
+	}
 }
