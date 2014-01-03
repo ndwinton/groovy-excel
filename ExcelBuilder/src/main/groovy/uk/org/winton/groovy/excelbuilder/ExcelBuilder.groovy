@@ -64,7 +64,7 @@ class ExcelBuilder extends BuilderSupport {
 
 	@Override
 	protected void setParent(Object parent, Object child) {
-		println "setParent($parent, $child)"
+		// println "setParent($parent, $child)"
 		if (child instanceof Sheet && !(parent instanceof ExcelBuilder)) {
 			throw new IllegalArgumentException("sheets can only be created at the top level within a builder")
 		}
@@ -72,7 +72,7 @@ class ExcelBuilder extends BuilderSupport {
 
 	@Override
 	protected Object createNode(Object name) {
-		println "createNode($name)"
+		// println "createNode($name)"
 		switch (name) {
 			case 'call':
 				return this
@@ -151,7 +151,7 @@ class ExcelBuilder extends BuilderSupport {
 
 	@Override
 	protected void nodeCompleted(Object parent, Object node) {
-		println("nodeCompleted($parent, $node)")
+		// println("nodeCompleted($parent, $node)")
 	}
 	
 	@Override
