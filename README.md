@@ -28,7 +28,7 @@ To give you an idea of the main features here is a quick example:
 	}
 	builder.workbook.write(new FileOutputStream(new File('test.xlsx')))
 
-There are more features to come, including setting column width and row height.
+There are more features to come, such as setting column width and row height, and a set of built-in and default styles.
 
 ExcelBuilder is licensed under a BSD-style licence.
 
