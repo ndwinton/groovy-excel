@@ -7,6 +7,7 @@ import javax.swing.text.StyledEditorKit.BoldAction;
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFFont
 import org.junit.Before
 import org.junit.Test
 
@@ -72,6 +73,30 @@ class FontEnhancerTest {
 		}
 	}
 
+	@Test
+	public void shouldBeAbleToCombineMultipleFonts() {
+		Font f3, f4
+		use (FontEnhancer) {
+			f1.workbook = f2.workbook = wb
+			f1.bold = true
+			f1.fontName = 'Times'
+			f1.fontHeightInPoints = 12
+			f1.charSet = Font.SYMBOL_CHARSET
+			f2.italic = true
+			f2.fontName = 'Courier'
+			f3 = wb.createFont()
+			f3.strikeout = true
+			f4 = f1.combine(f2, f3)
+			assert f4.bold
+			assert f4.fontName == 'Courier'
+			assert f4.fontHeightInPoints == 12
+			assert f4.italic
+			assert f4.strikeout
+			assert f4.charSet == Font.SYMBOL_CHARSET
+			assert f4.workbook == f1.workbook
+		}
+	}
+	
 	@Test
 	public void combiningFontsShouldReuseExistingFontsWhenAvailable() {
 		Font f3 = wb.createFont()

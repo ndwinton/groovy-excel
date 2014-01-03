@@ -32,21 +32,28 @@ class FontEnhancer {
 		self.fontHeight / 20.0
 	}
 	
-	static Font combine(Font self, Font other) {
-		Font combined = combineWithoutEnhancements(self, other)
+	static Font combine(Font self, Font... others) {
+		Font combined = combineWithoutEnhancements(self, others)
 		combined.workbook = self.workbook
 		combined
 	}
 	
-	private static Font combineWithoutEnhancements(Font self, Font other) {
+	private static Font combineWithoutEnhancements(Font self, Font[] others) {
 		Workbook workbook = self.workbook
 		Font base = workbook.getFontAt(0 as short)
+		
 		def combined = [:]
-		['boldweight', 'charSet', 'color', 'fontHeight',
-			'fontName', 'italic', 'strikeout', 'typeOffset', 'underline'].each { attr ->
-			combined[attr] = self[attr]
-			if (other[attr] != base[attr]) {
-				combined[attr] = other[attr]
+		def attributes = ['boldweight', 'charSet', 'color', 'fontHeight',
+				'fontName', 'italic', 'strikeout', 'typeOffset', 'underline']
+		attributes.each {
+			combined[it] = self[it]
+		}
+		
+		others.each { other ->
+			attributes.each { attr ->
+				if (other[attr] != base[attr]) {
+					combined[attr] = other[attr]
+				}
 			}
 		}
 			
@@ -64,9 +71,11 @@ class FontEnhancer {
 	
 	static Font enhance(Font font, Workbook workbook) {
 		font.metaClass {
-			setWorkbook = { Workbook wb ->
-				delegate.metaClass.getWorkbook = { -> wb }
-			}
+			// If necessary, setWorkbook could be implemented as follows ...
+			//
+			// setWorkbook = { Workbook wb ->
+			//	delegate.metaClass.getWorkbook = { -> wb }
+			// }
 			
 			getWorkbook = { ->
 				workbook
@@ -88,8 +97,8 @@ class FontEnhancer {
 				FontEnhancer.getFontHeightInPoints(delegate)
 			}
 			
-			combine = { Font other ->
-				enhance(FontEnhancer.combineWithoutEnhancements(delegate, other), workbook)
+			combine = { Font... others ->
+				enhance(FontEnhancer.combineWithoutEnhancements(delegate, others), workbook)
 			}
 		}
 		font
