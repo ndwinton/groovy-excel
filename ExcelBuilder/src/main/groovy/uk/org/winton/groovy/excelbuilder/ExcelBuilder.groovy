@@ -191,7 +191,7 @@ class ExcelBuilder extends BuilderSupport {
 		}
 		currentRow = findOrCreateRow(nextRowNum++)
 		attributes.cells?.each { value ->
-			createCell([value: value])
+			createCell([value: value, style: attributes.style])
 		}
 		currentRow
 	}
@@ -201,15 +201,21 @@ class ExcelBuilder extends BuilderSupport {
 	}
 	
 	private Cell createCell(Map attributes) {
-		def value = attributes.value ?: ''
+		def value = attributes.value
 		if (attributes.row != null) {
 			createRow([row: attributes.row])
+		}
+		if (currentRow == null) {
+			createRow([:])
 		}
 		nextColNum = attributes.column != null ? attributes.column : nextColNum
 		Cell cell = currentRow.getCell(nextColNum++, Row.CREATE_NULL_AS_BLANK)
 		
 		switch (value) {
 			case null:
+				// Do not overwrite current value if null
+				break
+	
 			case Number:
 			case Boolean:
 			case Date:
@@ -222,6 +228,7 @@ class ExcelBuilder extends BuilderSupport {
 				cell.setCellValue(value.toString())
 				break
 		}
+		applyStyles(cell, attributes.style)
 		cell
 	}
 	
@@ -241,4 +248,25 @@ class ExcelBuilder extends BuilderSupport {
 		styles[name]
 	}
 	
+	private void applyStyles(Cell cell, styleNameList) {
+		if (styleNameList != null) {
+			if (!styleNameList.respondsTo('join')) {
+				styleNameList = [styleNameList]
+			}
+			def name = styleNameList.join('+')
+			if (styles[name] == null) {
+				def styleList = []
+				styleNameList.each {
+					if (styles[it]) {
+						styleList << styles[it]
+					}
+					else {
+						throw new IllegalArgumentException("undefined style name: " + it)
+					}
+				}
+				styles[name] = styleList[0].combine(*styleList)
+			}
+			cell.setCellStyle(styles[name])
+		}
+	}
 }

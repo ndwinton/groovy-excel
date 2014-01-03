@@ -335,6 +335,19 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
+	public void shouldBeAbleToCreateACellWithImplictPositionAndNoPreExistingRow() {
+		Cell c
+		builder {
+			sheet {
+				c = cell(42)
+			}
+		}
+		assert c.rowIndex == 0
+		assert c.columnIndex == 0
+		assert c.getNumericCellValue() == 42
+	}
+	
+	@Test
 	public void shouldBeAbleToCreateRowAtAnExplicitPosition() {
 		Row r1, r2, r3, r4
 		builder {
@@ -515,6 +528,90 @@ class ExcelBuilderTest {
 	
 	@Test
 	public void shouldBeAbleToApplyStyleToACell() {
+		Cell c
+		builder {
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			sheet {
+				c = cell('I am centred', style: 'centred')
+			}
+		}
+		assert c.cellStyle.alignment == CellStyle.ALIGN_CENTER
+	}
+	
+	@Test
+	public void shouldBeAbleToApplyMultipleStylesToACell() {
+		Cell c1, c2
+		builder {
+			font('bold') {
+				bold = true
+			}
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			sheet {
+				c1 = cell('I am centred and bold', style: ['centred', 'bold'])
+				c2 = cell('So am I', style: ['centred', 'bold'])
+			}
+		}
+		assert c1.cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert c1.cellStyle.font == builder.fonts['bold']
+		assert c1.cellStyle == builder.styles['centred+bold']
 		
+		assert c2.cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert c2.cellStyle.font == builder.fonts['bold']
+		assert c2.cellStyle == builder.styles['centred+bold']
+	}
+	
+	@Test
+	public void shouldBeAbleToApplyStyleToARow() {
+		Row r
+		builder {
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			sheet {
+				r = row([1, 2, 'Hello'], style: 'centred')
+			}
+		}
+		assert r[0].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[1].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[2].cellStyle.alignment == CellStyle.ALIGN_CENTER
+	}
+	
+	@Test
+	public void shouldBeAbleToOverrideStyleForCellWithinARow() {
+		Row r
+		builder {
+			font('bold') {
+				bold = true
+			}
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			sheet {
+				r = row([1, 2, 'Hello'], style: 'centred') {
+					cell(column: 1, style: 'bold')
+				}
+			}
+		}
+		assert r[0].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[0].numericCellValue == 1
+		assert r[1].cellStyle.alignment == CellStyle.ALIGN_GENERAL
+		assert r[1].cellStyle.font == builder.fonts['bold']
+		assert r[1].numericCellValue == 2
+		assert r[2].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[2].stringCellValue == 'Hello'
+	}
+	
+	@Test(expected=IllegalArgumentException)
+	public void shouldThrowExceptionForUnknownStyle() {
+		Cell c
+		builder {
+			sheet {
+				c = cell('Bad style', style: 'undefined')
+			}
+		}
 	}
 }
