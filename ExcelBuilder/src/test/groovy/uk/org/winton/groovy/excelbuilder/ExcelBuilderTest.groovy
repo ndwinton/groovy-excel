@@ -636,6 +636,121 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
+	public void shouldBeAbleToSpecifyHeightOfARowInPoints() {
+		Row r
+		builder {
+			sheet {
+				r = row([1, 2, 'Hello'], height: 20.5)
+			}
+		}
+		assert r.heightInPoints == 20.5
+	}
+	
+	@Test
+	public void shouldBeAbleToSpecifyHeightOfACellInPoints() {
+		Cell c
+		builder {
+			sheet {
+				c = cell(row: 1, column:0, height: 20.5)
+			}
+		}
+		assert c.row.heightInPoints == 20.5
+	}
+	
+	@Test
+	public void settingCellHeightShouldHaveNoEffectIfRowIsAlreadyLarger() {
+		Row r
+		builder {
+			sheet {
+				r = row([1, 2, 'Hello'], height: 50) {
+					cell(height: 30)
+				}
+			}
+		}
+		assert r.heightInPoints == 50
+	}
+	
+	@Test
+	public void shouldBeAbleToForceLesserHeightByUsingNegativeOrZeroValue() {
+		Row r1, r2
+		builder {
+			sheet {
+				r1 = row([1, 2, 'Hello'], height: 50) {
+					cell(height: -30)
+				}
+				r2 = row(height: 0)
+			}
+		}
+		assert r1.heightInPoints == 30
+		assert r2.heightInPoints == 0
+	}
+	
+	@Test
+	public void shouldBeAbleToSetCellWidthInChars() {
+		Sheet s
+		builder {
+			s = sheet {
+				cell(row: 1, column:1, width: 50)
+			}
+		}
+		assert s.getColumnWidth(1) == 50 * 256
+	}
+	
+	@Test
+	public void settingCellWidthShouldHaveNoEffectIfCellIsAlreadyLarger() {
+		Sheet s
+		builder {
+			s = sheet {
+				cell(row: 0, column: 1, width: 100)
+				cell(row: 1, column: 1, width: 50)
+			}
+		}
+		assert s.getColumnWidth(1) == 100 * 256
+	}
+	
+	@Test
+	public void shouldBeAbleToForceLesserWidthByUsingNegativeOrZeroValue() {
+		Sheet s
+		builder {
+			s = sheet {
+				cell(row: 0, column: 1, width: 100)
+				cell(row: 1, column: 1, width: -50)
+				cell(column: 0, width: 0)
+			}
+		}
+		assert s.getColumnWidth(0) == 0
+		assert s.getColumnWidth(1) == 50 * 256
+	}
+	
+	@Test
+	public void shouldBeAbleToSetCellWidthInCharsForARow() {
+		Sheet s
+		builder {
+			s = sheet {
+				row([1, 2, 'Hello'], width: 50)
+			}
+		}
+		(0 .. 2).each {
+			assert s.getColumnWidth(it) == 50 * 256
+		}
+	}
+	
+	@Test
+	public void rowCellWidthShouldPropagateToNewCells() {
+		Sheet s
+		builder {
+			s = sheet {
+				row([1, 2, 'Hello'], width: 50) {
+					cell(42)
+				}
+			}
+		}
+		(0 .. 3).each {
+			assert s.getColumnWidth(it) == 50 * 256
+		}
+	}
+	
+	@Test
 	public void shouldBeAbleToCombineEverything() {
 		builder {
 			font('bold') {

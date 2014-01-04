@@ -172,8 +172,14 @@ class ExcelBuilder extends BuilderSupport {
 		currentRow = findOrCreateRow(nextRowNum++)
 		applyStyles(currentRow, attributes.style)
 		
+		if (attributes.height != null) {
+			currentRow.heightInPoints = attributes.height
+		}
+		
+		currentRow.metaClass.getAttributes = { -> attributes }
+		
 		attributes.cells?.each { value ->
-			createCell([value: value, style: attributes.style])
+			createCell([value: value, style: attributes.style, width: attributes.width])
 		}
 		
 		currentRow
@@ -211,8 +217,39 @@ class ExcelBuilder extends BuilderSupport {
 				cell.setCellValue(value.toString())
 				break
 		}
+		
 		applyStyles(cell, attributes.style ?: findStyle(currentRow.rowStyle))
+
+		setRowHeight(currentRow, attributes.height)				
+		setCellWidth(cell, attributes.width != null ? attributes.width : currentRow.attributes.width)
+		
 		cell
+	}
+	
+	private void setRowHeight(row, height) {
+		if (height == null) {
+			return
+		}
+		
+		if (height > row.heightInPoints) {
+			row.heightInPoints = height
+		}
+		else if (height <= 0) {
+			row.heightInPoints = height * -1
+		}
+	}
+	
+	private void setCellWidth(cell, width) {
+		if (width == null) {
+			return
+		}
+		
+		if ((width * 256) > currentSheet.getColumnWidth(cell.columnIndex)) {
+			currentSheet.setColumnWidth(cell.columnIndex, width * 256)
+		}
+		else if (width <= 0) {
+			currentSheet.setColumnWidth(cell.columnIndex, width * -256)
+		}
 	}
 	
 	private Font createFont(name) {
