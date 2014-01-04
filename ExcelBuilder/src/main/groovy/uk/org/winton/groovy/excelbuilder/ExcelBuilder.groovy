@@ -170,9 +170,12 @@ class ExcelBuilder extends BuilderSupport {
 			nextRowNum = attributes.row
 		}
 		currentRow = findOrCreateRow(nextRowNum++)
+		applyStyles(currentRow, attributes.style)
+		
 		attributes.cells?.each { value ->
 			createCell([value: value, style: attributes.style])
 		}
+		
 		currentRow
 	}
 
@@ -208,7 +211,7 @@ class ExcelBuilder extends BuilderSupport {
 				cell.setCellValue(value.toString())
 				break
 		}
-		applyStyles(cell, attributes.style)
+		applyStyles(cell, attributes.style ?: findStyle(currentRow.rowStyle))
 		cell
 	}
 	
@@ -228,7 +231,7 @@ class ExcelBuilder extends BuilderSupport {
 		styles[name]
 	}
 	
-	private void applyStyles(Cell cell, styleNameList) {
+	private void applyStyles(entity, styleNameList) {
 		if (styleNameList != null) {
 			if (!styleNameList.respondsTo('join')) {
 				styleNameList = [styleNameList]
@@ -246,7 +249,19 @@ class ExcelBuilder extends BuilderSupport {
 				}
 				styles[name] = styleList[0].combine(*styleList)
 			}
-			cell.setCellStyle(styles[name])
+			switch (entity) {
+				case Cell:
+					entity.cellStyle = styles[name]
+					break
+				
+				case Row:
+					entity.rowStyle = styles[name]
+					break
+			}
 		}
+	}
+	
+	private def findStyle(style) {
+		styles.findResult { k, v -> v == style ? k : null }
 	}
 }

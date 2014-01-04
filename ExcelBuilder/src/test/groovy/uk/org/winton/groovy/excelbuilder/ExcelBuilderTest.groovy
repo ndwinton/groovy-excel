@@ -605,6 +605,26 @@ class ExcelBuilderTest {
 		assert r[2].stringCellValue == 'Hello'
 	}
 	
+	@Test
+	public void rowStyleShouldApplyToNewCellsCreatedWithinTheRow() {
+		Row r
+		builder {
+			style('centred') {
+				alignment = CellStyle.ALIGN_CENTER
+			}
+			sheet {
+				r = row([1, 2, 'Hello'], style: 'centred') {
+					cell('Me too', column: 3)
+				}
+			}
+		}
+		assert r.rowStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[0].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[1].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[2].cellStyle.alignment == CellStyle.ALIGN_CENTER
+		assert r[3].cellStyle.alignment == CellStyle.ALIGN_CENTER
+	}
+
 	@Test(expected=IllegalArgumentException)
 	public void shouldThrowExceptionForUnknownStyle() {
 		Cell c
@@ -630,6 +650,7 @@ class ExcelBuilderTest {
 			sheet {
 				row([1, 2, 'Hello'], style: 'centred') {
 					cell(column: 1, style: ['bold', 'centred'])
+					cell(column: 4, 'Me too')
 				}
 				row([5, 6, 7], style: 'bold')
 				row(['Today', new Date()]) {
