@@ -89,6 +89,6 @@ class SheetEnhancerTest {
 		s1.setColumnWidthInChars(0, 42)
 		assert s1.getColumnWidthInChars(0) == 42
 		s1.defaultColumnWidthInChars = 20.5
-		assert s1.defaultColumnWidthInChars == 20.5
+		assert s1.defaultColumnWidthInChars == 21
 	}
 }
