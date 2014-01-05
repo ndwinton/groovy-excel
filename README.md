@@ -7,8 +7,9 @@ To give you an idea of the main features here is a quick example:
 
 	def builder = new ExcelBuilder()
 	builder {
-		font('bold') {
+		font('title') {
 			bold = true
+			color = IndexedColors.RED.index
 		}
 		style('centred') {
 			alignment = CellStyle.ALIGN_CENTER
@@ -17,18 +18,74 @@ To give you an idea of the main features here is a quick example:
 			dataFormatString = 'dd/mm/yyyy'
 		}
 		sheet {
-			row([1, 2, 'Hello'], style: 'centred') {
-				cell(column: 2, style: ['bold', 'centred'])
-			}
-			row([5, 6, 7], style: 'bold')
+			row([1, 2, 'Hello'], style: ['centred', 'title'])
+			row([5, 6, 7], style: 'centred')
 			row(['Today', new Date()]) {
-				cell(column: 1, style: 'uk-date')
+				cell(column: 1, style: 'uk-date', width: 20)
 			}
 		}
 	}
 	builder.workbook.write(new FileOutputStream(new File('test.xlsx')))
 
-There are more features to come, such as setting column width and row height, and a set of built-in and default styles.
+This produces a workbook with a sheet that looks something like this:
+
+<table border=1 cellspacing=0 cellpadding=0 width=268
+ style='font-family:Calibri;width:201.0pt;border-collapse:collapse;border:none'>
+ <tr style='height:15.0pt'>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><b><span style='color:red'>1</span></b></p>
+  </td>
+  <td width=140 nowrap valign=bottom style='width:105.0pt;border:solid windowtext 1.0pt;
+  border-left:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><b><span style='color:red'>2</span></b></p>
+  </td>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border:solid windowtext 1.0pt;
+  border-left:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><b><span style='color:red'>Hello</span></b></p>
+  </td>
+ </tr>
+ <tr style='height:15.0pt'>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><span style='color:black'>5</span></p>
+  </td>
+  <td width=140 nowrap valign=bottom style='width:105.0pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><span style='color:black'>6</span></p>
+  </td>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'><span style='color:black'>7</span></p>
+  </td>
+ </tr>
+ <tr style='height:15.0pt'>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+  normal'><span style='color:black'>Today</span></p>
+  </td>
+  <td width=140 nowrap valign=bottom style='width:105.0pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'>
+  <p align=right style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:right;line-height:normal'><span style='color:black'>05/01/2014</span></p>
+  </td>
+  <td width=64 nowrap valign=bottom style='width:48.0pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'></td>
+ </tr>
+</table>
+
+There are more features to come, but it's fully functional right now.
 
 ExcelBuilder is licensed under a BSD-style licence.
 

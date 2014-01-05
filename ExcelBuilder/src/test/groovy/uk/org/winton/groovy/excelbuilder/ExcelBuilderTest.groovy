@@ -781,8 +781,9 @@ class ExcelBuilderTest {
 	@Test
 	public void shouldBeAbleToCombineEverything() {
 		builder {
-			font('bold') {
+			font('title') {
 				bold = true
+				color = IndexedColors.RED.index
 			}
 			style('centred') {
 				alignment = CellStyle.ALIGN_CENTER
@@ -790,18 +791,11 @@ class ExcelBuilderTest {
 			style('uk-date') {
 				dataFormatString = 'dd/mm/yyyy'
 			}
-			style('us-date') {
-				dataFormatString = 'mm/dd/yyyy'
-			}
 			sheet {
-				row([1, 2, 'Hello'], style: 'centred') {
-					cell(column: 1, style: ['bold', 'centred'])
-					cell(column: 4, 'Me too')
-				}
-				row([5, 6, 7], style: 'bold')
-				row(['Today', new Date(), new Date()]) {
+				row([1, 2, 'Hello'], style: ['centred', 'title'])
+				row([5, 6, 7], style: 'centred')
+				row(['Today', new Date()]) {
 					cell(column: 1, style: 'uk-date', width: 20)
-					cell(column: 2, style: 'us-date', width: 20)
 				}
 			}
 		}
