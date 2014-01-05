@@ -34,6 +34,22 @@ class SheetEnhancer {
 		self.workbook.isSheetVeryHidden(self.workbook.getSheetIndex(self))
 	}
 	
+	static void setColumnWidthInChars(Sheet self, int index, Number width) {
+		self.setColumnWidth(index, Math.min((width * 256) as int, 255 * 256))
+	}
+	
+	static Number getColumnWidthInChars(Sheet self, int index) {
+		self.getColumnWidth(index) / 256.0
+	}
+
+	static void setDefaultColumnWidthInChars(Sheet self, Number width) {
+		self.setDefaultColumnWidth(Math.min(Math.ceil(width) as int, 255))
+	}
+	
+	static Number getDefaultColumnWidthInChars(Sheet self) {
+		self.getDefaultColumnWidth()
+	}
+	
 	static Sheet enhance(Sheet sheet) {
 		sheet.metaClass {
 			setActive = { boolean active ->
@@ -58,6 +74,22 @@ class SheetEnhancer {
 			
 			getVeryHidden = { ->
 				SheetEnhancer.getVeryHidden(delegate)
+			}
+			
+			setColumnWidthInChars = { int column, Number width ->
+				SheetEnhancer.setColumnWidthInChars(delegate, column, width)
+			}
+			
+			getColumnWidthInChars = { int column ->
+				SheetEnhancer.getColumnWidthInChars(delegate, column)
+			}
+			
+			setDefaultColumnWidthInChars = { Number width ->
+				SheetEnhancer.setDefaultColumnWidthInChars(delegate, width)
+			}
+			
+			getDefaultColumnWidthInChars = {
+				SheetEnhancer.getDefaultColumnWidthInChars(delegate)
 			}
 		}
 		sheet

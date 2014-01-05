@@ -97,6 +97,9 @@ class ExcelBuilder extends BuilderSupport {
 				return this
 				
 			case 'sheet':
+				if (attributes.name == null) {
+					attributes.name = nextSheetName++
+				}
 				return createSheet(attributes)
 			
 			case 'row':
@@ -157,7 +160,12 @@ class ExcelBuilder extends BuilderSupport {
 		
 		currentSheet.active = attributes.active ?: false
 		currentSheet.hidden = attributes.hidden ?: false
-		
+		if (attributes.width >= 0) {
+			currentSheet.defaultColumnWidthInChars = attributes.width
+		}
+		if (attributes.height >= 0) {
+			currentSheet.defaultRowHeightInPoints = attributes.height
+		}
 		return currentSheet
 	}
 		
@@ -220,35 +228,29 @@ class ExcelBuilder extends BuilderSupport {
 		
 		applyStyles(cell, attributes.style ?: findStyle(currentRow.rowStyle))
 
-		setRowHeight(currentRow, attributes.height)				
-		setCellWidth(cell, attributes.width != null ? attributes.width : currentRow.attributes.width)
+		setRowHeight(currentRow, attributes.height, attributes.force)				
+		setCellWidth(cell, attributes.width != null ? attributes.width : currentRow.attributes.width, attributes.force)
 		
 		cell
 	}
 	
-	private void setRowHeight(row, height) {
+	private void setRowHeight(row, height, force) {
 		if (height == null) {
 			return
 		}
 		
-		if (height > row.heightInPoints) {
+		if (height > row.heightInPoints || force) {
 			row.heightInPoints = height
-		}
-		else if (height <= 0) {
-			row.heightInPoints = height * -1
 		}
 	}
 	
-	private void setCellWidth(cell, width) {
+	private void setCellWidth(cell, width, force) {
 		if (width == null) {
 			return
 		}
 		
-		if ((width * 256) > currentSheet.getColumnWidth(cell.columnIndex)) {
-			currentSheet.setColumnWidth(cell.columnIndex, width * 256)
-		}
-		else if (width <= 0) {
-			currentSheet.setColumnWidth(cell.columnIndex, width * -256)
+		if (width > currentSheet.getColumnWidthInChars(cell.columnIndex) || force) {
+			currentSheet.setColumnWidthInChars(cell.columnIndex, width)
 		}
 	}
 	

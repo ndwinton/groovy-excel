@@ -45,6 +45,21 @@ class ExcelBuilderTest {
 		builder.doesNotExist()
 	}
 	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldThrowExceptionForUnknownBuilderContentTypeWithValue() {
+		builder.doesNotExist('foo')
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldThrowExceptionForUnknownBuilderContentTypeWithAttributes() {
+		builder.doesNotExist(foo: 42)
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void shouldThrowExceptionForUnknownBuilderContentTypeWithAttributesAndValue() {
+		builder.doesNotExist(123, foo: 42)
+	}
+	
 	@Test
 	public void shouldBeABleToCreateUnnamedWorksheets() {
 		Sheet s1 = builder.sheet()
@@ -671,18 +686,16 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
-	public void shouldBeAbleToForceLesserHeightByUsingNegativeOrZeroValue() {
-		Row r1, r2
+	public void shouldBeAbleToForceLesserCellHeightByUsingForceOption() {
+		Row r1
 		builder {
 			sheet {
 				r1 = row([1, 2, 'Hello'], height: 50) {
-					cell(height: -30)
+					cell(height: 30, force: true)
 				}
-				r2 = row(height: 0)
 			}
 		}
 		assert r1.heightInPoints == 30
-		assert r2.heightInPoints == 0
 	}
 	
 	@Test
@@ -693,7 +706,7 @@ class ExcelBuilderTest {
 				cell(row: 1, column:1, width: 50)
 			}
 		}
-		assert s.getColumnWidth(1) == 50 * 256
+		assert s.getColumnWidthInChars(1) == 50
 	}
 	
 	@Test
@@ -705,21 +718,19 @@ class ExcelBuilderTest {
 				cell(row: 1, column: 1, width: 50)
 			}
 		}
-		assert s.getColumnWidth(1) == 100 * 256
+		assert s.getColumnWidthInChars(1) == 100
 	}
 	
 	@Test
-	public void shouldBeAbleToForceLesserWidthByUsingNegativeOrZeroValue() {
+	public void shouldBeAbleToForceLesserWidthByUsingForceOption() {
 		Sheet s
 		builder {
 			s = sheet {
 				cell(row: 0, column: 1, width: 100)
-				cell(row: 1, column: 1, width: -50)
-				cell(column: 0, width: 0)
+				cell(row: 1, column: 1, width: 50, force: true)
 			}
 		}
-		assert s.getColumnWidth(0) == 0
-		assert s.getColumnWidth(1) == 50 * 256
+		assert s.getColumnWidthInChars(1) == 50
 	}
 	
 	@Test
@@ -731,7 +742,7 @@ class ExcelBuilderTest {
 			}
 		}
 		(0 .. 2).each {
-			assert s.getColumnWidth(it) == 50 * 256
+			assert s.getColumnWidthInChars(it) == 50
 		}
 	}
 	
@@ -746,8 +757,25 @@ class ExcelBuilderTest {
 			}
 		}
 		(0 .. 3).each {
-			assert s.getColumnWidth(it) == 50 * 256
+			assert s.getColumnWidthInChars(it) == 50
 		}
+	}
+	
+	@Test
+	public void shouldBeAbleToSetDefaultWidthAndHeightForCellsInSheet() {
+		Sheet s
+		Row r
+		builder {
+			s = sheet(width: 50, height: 20) {
+				r = row([1, 2, 'Hello'])
+			}
+		}
+		assert s.defaultColumnWidthInChars == 50
+		assert s.defaultRowHeightInPoints == 20
+		(0 .. 3).each {
+			assert s.getColumnWidthInChars(it) == 50
+		}
+		assert r.heightInPoints == 20
 	}
 	
 	@Test
@@ -762,14 +790,18 @@ class ExcelBuilderTest {
 			style('uk-date') {
 				dataFormatString = 'dd/mm/yyyy'
 			}
+			style('us-date') {
+				dataFormatString = 'mm/dd/yyyy'
+			}
 			sheet {
 				row([1, 2, 'Hello'], style: 'centred') {
 					cell(column: 1, style: ['bold', 'centred'])
 					cell(column: 4, 'Me too')
 				}
 				row([5, 6, 7], style: 'bold')
-				row(['Today', new Date()]) {
-					cell(column: 1, style: 'uk-date')
+				row(['Today', new Date(), new Date()]) {
+					cell(column: 1, style: 'uk-date', width: 20)
+					cell(column: 2, style: 'us-date', width: 20)
 				}
 			}
 		}

@@ -51,6 +51,28 @@ class SheetEnhancerTest {
 	}
 	
 	@Test
+	public void shouldBeAbleToSetAndGetColumnWidthInCharsUsingClassAsCategory() {
+		use (SheetEnhancer) {
+			s1.setColumnWidthInChars(0, 10.5)
+			assert s1.getColumnWidthInChars(0) == 10.5
+			assert s1.getColumnWidth(0) == 10.5 * 256
+			s1.setColumnWidthInChars(0, 1000)
+			assert s1.getColumnWidthInChars(0) == 255
+		}
+	}
+	
+	@Test
+	public void shouldBeAbleToSetAndGetDefaultColumnWidthInRoundedUpCharsUsingClassAsCategory() {
+		use (SheetEnhancer) {
+			s1.defaultColumnWidthInChars = 10.5
+			assert s1.defaultColumnWidthInChars == 11
+			assert s1.defaultColumnWidth == 11
+			s1.defaultColumnWidthInChars = 1000
+			assert s1.defaultColumnWidth == 255
+		}
+	}
+	
+	@Test
 	public void shouldBeAbleToEnhanceInstanceMetaClass() {
 		SheetEnhancer.enhance(s1)
 		SheetEnhancer.enhance(s2)
@@ -64,5 +86,9 @@ class SheetEnhancerTest {
 		assert wb.isSheetHidden(wb.getSheetIndex(s1))
 		assert s2.veryHidden
 		assert wb.isSheetVeryHidden(wb.getSheetIndex(s2))
+		s1.setColumnWidthInChars(0, 42)
+		assert s1.getColumnWidthInChars(0) == 42
+		s1.defaultColumnWidthInChars = 20.5
+		assert s1.defaultColumnWidthInChars == 20.5
 	}
 }
