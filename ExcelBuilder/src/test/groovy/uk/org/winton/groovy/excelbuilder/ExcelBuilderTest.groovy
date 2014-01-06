@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.DataFormatter
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
@@ -776,6 +777,71 @@ class ExcelBuilderTest {
 			assert s.getColumnWidthInChars(it) == 50
 		}
 		assert r.heightInPoints == 20
+	}
+	
+	@Test
+	public void shouldHaveASetOfPredefinedDateStyles() {
+		assert builder.styles.collect {
+			k, v -> k
+		}.containsAll(['default-date', 'default-numeric', 'default-text', 'default-boolean',
+			'iso-date', 'iso-datetime',
+			'euro-date', 'euro-datetime',
+			'us-date', 'us-datetime'])
+	}
+	
+	@Test
+	public void datesAndCalendarsShouldBeFormattedWithDefaultDateStyle() {
+		Row r
+		Calendar cal = new GregorianCalendar(2014, 0, 6, 12, 34, 56)
+		builder {
+			sheet {
+				r = row([cal.time, cal])
+			}
+		}
+		
+		def fmt = new DataFormatter()
+		assert fmt.formatCellValue(r[0]) == '2014/01/06 12:34:56'
+		assert fmt.formatCellValue(r[1]) == '2014/01/06 12:34:56'
+	}
+	
+	@Test
+	public void shouldBePossibleToOverrideTheDefaultDateStyle() {
+		Row r
+		Calendar cal = new GregorianCalendar(2014, 0, 6, 12, 34, 56)
+		builder.styles['default-date'] = builder.styles['euro-date']
+		builder {
+			sheet {
+				r = row([cal.time, cal])
+			}
+		}
+		
+		def fmt = new DataFormatter()
+		assert fmt.formatCellValue(r[0]) == '06/01/2014'
+		assert fmt.formatCellValue(r[1]) == '06/01/2014'
+	}
+	
+	@Test
+	public void shouldBePossibleToOverrideTheDefaultNumericTextAndBooleanStyling() {
+		Row r
+		builder {
+			font('bold') {
+				bold = true
+			}
+			font('italic') {
+				italic = true
+			}
+
+			styles['default-text'] = styles['bold']
+			styles['default-numeric'] = styles['italic']
+			styles['default-boolean'] = styles['bold']
+
+			sheet {
+				r = row([42, 'Hello', true])
+			}
+		}
+		assert r[0].cellStyle == builder.styles['italic']
+		assert r[1].cellStyle == builder.styles['bold']
+		assert r[2].cellStyle == builder.styles['bold']
 	}
 	
 	@Test

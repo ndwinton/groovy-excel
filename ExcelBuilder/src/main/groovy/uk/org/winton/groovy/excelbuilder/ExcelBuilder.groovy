@@ -40,6 +40,15 @@ class ExcelBuilder extends BuilderSupport {
 	
 	ExcelBuilder() {
 		workbook = new XSSFWorkbook()
+		createStyle('iso-date').dataFormatString = 'yyyy/mm/dd'
+		createStyle('iso-datetime').dataFormatString = 'yyyy/mm/dd hh:mm:ss'
+		createStyle('euro-date').dataFormatString = 'dd/mm/yyyy'
+		createStyle('euro-datetime').dataFormatString = 'dd/mm/yyyy hh:mm:ss'
+		createStyle('us-date').dataFormatString = 'mm/dd/yyyy'
+		createStyle('us-datetime').dataFormatString = 'mm/dd/yyyy hh:mm:ss'
+		styles['default-date'] = styles['iso-datetime']
+		CellStyle base = CellStyleEnhancer.enhance(workbook.getCellStyleAt(0 as short), workbook)
+		styles['default-numeric'] = styles['default-text'] = styles['default-boolean'] = base
 	}
 
 	@Override
@@ -214,15 +223,28 @@ class ExcelBuilder extends BuilderSupport {
 				break
 	
 			case Number:
+				cell.setCellValue(value)
+				cell.setCellStyle(styles['default-numeric'])
+				break
+				
 			case Boolean:
-			case Date:
-			case Calendar:
+				cell.setCellValue(value)
+				cell.setCellStyle(styles['default-boolean'])
+
 			case String:
 				cell.setCellValue(value)
+				cell.setCellStyle(styles['default-text'])
 				break
 			
+			case Date:
+			case Calendar:
+				cell.setCellValue(value)
+				cell.setCellStyle(styles['default-date'])
+				break
+				
 			default:
 				cell.setCellValue(value.toString())
+				cell.setCellStyle(styles['default-text'])
 				break
 		}
 		
