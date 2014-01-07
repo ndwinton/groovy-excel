@@ -17,8 +17,10 @@ import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.CellValue
 import org.apache.poi.ss.usermodel.DataFormat
 import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.FormulaEvaluator
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -31,6 +33,7 @@ class ExcelBuilder extends BuilderSupport {
 	final Map<String, Sheet> sheets = [:]
 	final Map<String, Font> fonts = [:]
 	final Map<String, CellStyle> styles = [:]
+	final FormulaEvaluator evaluator
 	
 	private String nextSheetName = 'Sheet1'
 	private Sheet currentSheet
@@ -40,6 +43,7 @@ class ExcelBuilder extends BuilderSupport {
 	
 	ExcelBuilder() {
 		workbook = new XSSFWorkbook()
+		evaluator = workbook.creationHelper.createFormulaEvaluator()
 		createStyle('iso-date').dataFormatString = 'yyyy/mm/dd'
 		createStyle('iso-datetime').dataFormatString = 'yyyy/mm/dd hh:mm:ss'
 		createStyle('euro-date').dataFormatString = 'dd/mm/yyyy'
@@ -224,27 +228,23 @@ class ExcelBuilder extends BuilderSupport {
 	
 			case Number:
 				cell.setCellValue(value)
-				cell.setCellStyle(styles['default-numeric'])
+				cell.cellStyle = styles['default-numeric']
 				break
 				
 			case Boolean:
 				cell.setCellValue(value)
-				cell.setCellStyle(styles['default-boolean'])
-
-			case String:
-				cell.setCellValue(value)
-				cell.setCellStyle(styles['default-text'])
+				cell.cellStyle = styles['default-boolean']
 				break
-			
+				
 			case Date:
 			case Calendar:
 				cell.setCellValue(value)
-				cell.setCellStyle(styles['default-date'])
+				cell.cellStyle = styles['default-date']
 				break
-				
+	
+			case String:
 			default:
-				cell.setCellValue(value.toString())
-				cell.setCellStyle(styles['default-text'])
+				setFormulaOrStringCellValue(cell, value)
 				break
 		}
 		
@@ -254,6 +254,38 @@ class ExcelBuilder extends BuilderSupport {
 		setCellWidth(cell, attributes.width != null ? attributes.width : currentRow.attributes.width, attributes.force)
 		
 		cell
+	}
+	
+	private setFormulaOrStringCellValue(Cell cell, String value) {
+		def style = styles['default-text']
+		if (value.startsWith("=")) {
+			value = value[1..-1]
+			cell.cellFormula = value
+			evaluator.evaluateFormulaCell(cell)
+			switch (cell.cachedFormulaResultType) {
+				case Cell.CELL_TYPE_BOOLEAN:
+					style = styles['default-boolean']
+					break
+					
+				case Cell.CELL_TYPE_NUMERIC:
+					style = styles['default-numeric']
+					break
+					
+				case Cell.CELL_TYPE_STRING:
+					style = styles['default-text']
+					break
+					
+				default:
+					break
+			}
+		}
+		else if (value.startsWith("'")) {
+			cell.setCellValue(value[1..-1])
+		}
+		else {
+			cell.setCellValue(value)
+		}
+		cell.cellStyle = style
 	}
 	
 	private void setRowHeight(row, height, force) {

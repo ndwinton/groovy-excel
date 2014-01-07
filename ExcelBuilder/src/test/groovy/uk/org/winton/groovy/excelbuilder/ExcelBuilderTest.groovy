@@ -830,10 +830,13 @@ class ExcelBuilderTest {
 			font('italic') {
 				italic = true
 			}
-
+			font('strikeout') {
+				strikeout = true
+			}
+			
 			styles['default-text'] = styles['bold']
 			styles['default-numeric'] = styles['italic']
-			styles['default-boolean'] = styles['bold']
+			styles['default-boolean'] = styles['strikeout']
 
 			sheet {
 				r = row([42, 'Hello', true])
@@ -841,7 +844,66 @@ class ExcelBuilderTest {
 		}
 		assert r[0].cellStyle == builder.styles['italic']
 		assert r[1].cellStyle == builder.styles['bold']
-		assert r[2].cellStyle == builder.styles['bold']
+		assert r[2].cellStyle == builder.styles['strikeout']
+	}
+	
+	@Test
+	public void shouldBePossibleToSetFormulaeAndHaveThemEvaluated() {
+		Row r
+		builder {
+			sheet {
+				def amount = 3
+				r = row(["NOT a formula",'=LEFT(A1,3)',"=RIGHT(A1,$amount)"])
+			}
+		}
+		assert r[0].stringCellValue == 'NOT a formula'
+		assert r[1].cellFormula == 'LEFT(A1,3)'
+		assert r[1].stringCellValue == 'NOT'
+		assert r[2].cellFormula == 'RIGHT(A1,3)'
+		assert r[2].stringCellValue == 'ula'
+	}
+	
+	@Test
+	public void evaluatedFormulaCellShouldHaveCorrectValueTypeAndStyling() {
+		Row r
+		builder {
+			sheet {
+				font('bold') {
+					bold = true
+				}
+				font('italic') {
+					italic = true
+				}
+				font('strikeout') {
+					strikeout = true
+				}
+				
+				styles['default-text'] = styles['bold']
+				styles['default-numeric'] = styles['italic']
+				styles['default-boolean'] = styles['strikeout']
+				r = row(["NOT a formula",'=LEFT(A1,3)','=LEN(A1)', '=A1="Foobar"'])
+			}
+		}
+		assert r[0].stringCellValue == 'NOT a formula'
+		assert r[1].stringCellValue == 'NOT'
+		assert r[1].cellStyle == builder.styles['bold']
+		assert r[2].numericCellValue == 13
+		assert r[2].cellStyle == builder.styles['italic']
+		assert !r[3].booleanCellValue
+		assert r[3].cellStyle == builder.styles['strikeout']
+	}
+	
+	@Test
+	public void shouldBeAbleToForceValueToTextWithLeadingQuote() {
+		Row r
+		builder {
+			sheet {
+				r = row(["NOT a formula",'=LEFT(A1,3)',"'=LEN(A1)"])
+			}
+		}
+		assert r[0].stringCellValue == 'NOT a formula'
+		assert r[1].stringCellValue == 'NOT'
+		assert r[2].stringCellValue == '=LEN(A1)'
 	}
 	
 	@Test
