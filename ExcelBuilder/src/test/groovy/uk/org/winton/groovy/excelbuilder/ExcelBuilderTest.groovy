@@ -16,6 +16,7 @@ import org.junit.Ignore
 
 class ExcelBuilderTest {
 	static final String TEST_FILE = "test.xlsx"
+	static final String TEMPLATE_FILE_NAME = ExcelBuilderTest.classLoader.getResource("test-template.xlsx").file
 	ExcelBuilder builder
 	
 	@Before
@@ -907,7 +908,7 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
-	public void shouldBeAbleToCombineEverything() {
+	public void shouldBeAbleToCombineEverythingToGenerateNewFile() {
 		builder {
 			font('title') {
 				bold = true
@@ -929,4 +930,56 @@ class ExcelBuilderTest {
 		}
 		builder.workbook.write(new FileOutputStream(new File(TEST_FILE)))
 	}
+	
+	@Test
+	public void shouldBeAbleToConstructAnInstanceWithATemplateFile() {
+		def templateFile = new File(TEMPLATE_FILE_NAME)
+		builder = new ExcelBuilder(templateFile)
+		assert builder
+		assert builder.templateFile.canonicalPath == templateFile.canonicalPath
+	}
+	
+	@Test
+	public void shouldBeAbleToConstructAnInstanceWithATemplateFileName() {
+		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
+		assert builder
+		assert builder.templateFile.canonicalPath == new File(TEMPLATE_FILE_NAME).canonicalPath
+	}
+	
+	@Test
+	public void workbookShouldContainTemplateFileContentsIfNoOtherModificationsAreMade() {
+		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
+		assert builder.workbook.numberOfSheets == 4
+		Sheet data = builder.workbook.getSheet("Data")
+		assert data
+		data.getRow(0).getCell(0).getStringCellValue() == 'Alpha'
+	}
+	
+	@Test
+	public void usingNamedSheetWithTemplateShouldModifyThatSheet() {
+		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
+		Sheet data
+		builder {
+			data = sheet('Data') {
+				cell('Hello', row: 0, column: 0)
+				row([1, 2, 3], row: 1)
+			}
+		}
+		assert data.getRow(0).getCell(0).stringCellValue == 'Hello'
+		assert data.getRow(0).getCell(1).stringCellValue == 'Beta'
+		assert data.getRow(1).getCell(2).numericCellValue == 3		
+	}
+	
+	@Test
+	public void newlyGeneratedSheetNamesShouldBeUnique() {
+		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
+		Sheet data
+		builder {
+			data = sheet {
+				row([1, 2, 3])
+			}
+		}
+		assert data.sheetName == 'Sheet3'
+	}
+	
 }

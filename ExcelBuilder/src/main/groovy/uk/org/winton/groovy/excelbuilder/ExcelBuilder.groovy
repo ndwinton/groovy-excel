@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 class ExcelBuilder extends BuilderSupport {
@@ -34,6 +35,7 @@ class ExcelBuilder extends BuilderSupport {
 	final Map<String, Font> fonts = [:]
 	final Map<String, CellStyle> styles = [:]
 	final FormulaEvaluator evaluator
+	final File templateFile
 	
 	private String nextSheetName = 'Sheet1'
 	private Sheet currentSheet
@@ -42,7 +44,21 @@ class ExcelBuilder extends BuilderSupport {
 	private int nextColNum = 0
 	
 	ExcelBuilder() {
-		workbook = new XSSFWorkbook()
+		this(null)
+	}
+
+	ExcelBuilder(String templateFileName) {
+		this(new File(templateFileName))
+	}
+	
+	ExcelBuilder(File templateFile) {
+		this.templateFile = templateFile 
+		if (templateFile != null) {
+			workbook = WorkbookFactory.create(templateFile)
+		}
+		else {
+			workbook = new XSSFWorkbook()
+		}
 		evaluator = workbook.creationHelper.createFormulaEvaluator()
 		createStyle('iso-date').dataFormatString = 'yyyy/mm/dd'
 		createStyle('iso-datetime').dataFormatString = 'yyyy/mm/dd hh:mm:ss'
@@ -52,9 +68,8 @@ class ExcelBuilder extends BuilderSupport {
 		createStyle('us-datetime').dataFormatString = 'mm/dd/yyyy hh:mm:ss'
 		styles['default-date'] = styles['iso-datetime']
 		CellStyle base = CellStyleEnhancer.enhance(workbook.getCellStyleAt(0 as short), workbook)
-		styles['default-numeric'] = styles['default-text'] = styles['default-boolean'] = base
-	}
-
+		styles['default-numeric'] = styles['default-text'] = styles['default-boolean'] = base	}
+	
 	@Override
 	protected void setParent(Object parent, Object child) {
 		// println "setParent($parent, $child)"
@@ -71,7 +86,7 @@ class ExcelBuilder extends BuilderSupport {
 				return this
 				
 			case 'sheet':
-				return createSheet([name: nextSheetName++])
+				return createSheet([name: uniqueSheetName()])
 			
 			case 'row':
 				return createRow([:])
@@ -167,7 +182,7 @@ class ExcelBuilder extends BuilderSupport {
 	private Sheet createSheet(Map attributes) {
 		
 		def name = attributes.name
-		currentSheet = workbook.createSheet(name)
+		currentSheet = workbook.getSheet(name) ?: workbook.createSheet(name)
 		sheets[name] = currentSheet
 		SheetEnhancer.enhance(currentSheet)
 		
@@ -181,7 +196,14 @@ class ExcelBuilder extends BuilderSupport {
 		}
 		return currentSheet
 	}
-		
+	
+	private String uniqueSheetName() {
+		while (workbook.getSheet(nextSheetName) != null) {
+			nextSheetName++
+		}
+		nextSheetName
+	}
+	
 	private Row createRow(Map attributes) {
 		if (currentSheet == null) {
 			throw new IllegalArgumentException("row can't be created without a previously defined sheet")
