@@ -14,10 +14,10 @@ import org.apache.poi.ss.usermodel.Workbook
  * 
  * <p>The class adds the following properties:
  * <dl>
- * <dt>workbook</dt>
+ * <dt><b>workbook</b></dt>
  * 	<dd>Holds the workbook within which this CellStyle was created. When using CellStyleEnhancer
  * 	as a category class, you must set the workbook before using the other methods.</dd>
- * <dt>dataFormatString</dt>
+ * <dt><b>dataFormatString</b></dt>
  * 	<dd>Adds a setter to match the existing getter, making the property writable.</ddt>
  * </dl>
  * It also adds the {@link #combine(CellStyle, CellStyle...)} and {@link #enhance(CellStyle, Workbook)}
@@ -134,7 +134,7 @@ class CellStyleEnhancer {
 	 * 
 	 * @param style the CellStyle instance to enhance
 	 * @param workbook the Workbook to which the CellStyle belongs
-	 * @return the original CellStyle instance
+	 * @return the enhanced CellStyle instance
 	 */
 	static CellStyle enhance(CellStyle style, Workbook workbook) {
 		style.metaClass {
