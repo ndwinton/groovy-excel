@@ -54,12 +54,25 @@ class ExcelBuilder extends BuilderSupport {
 	ExcelBuilder(File templateFile) {
 		this.templateFile = templateFile 
 		if (templateFile != null) {
-			workbook = WorkbookFactory.create(templateFile)
+			workbook = loadTemplateAndPopulateSheetNames(templateFile)
 		}
 		else {
 			workbook = new XSSFWorkbook()
 		}
 		evaluator = workbook.creationHelper.createFormulaEvaluator()
+		createDefaultStyles()
+	}
+
+
+	private Workbook loadTemplateAndPopulateSheetNames(templateFile) {
+		Workbook templateWorkbook = WorkbookFactory.create(templateFile)
+		for (int sheetIndex = 0; sheetIndex < templateWorkbook.numberOfSheets; sheetIndex++) {
+			sheets[templateWorkbook.getSheetName(sheetIndex)] = templateWorkbook.getSheetAt(sheetIndex)
+		}
+		return templateWorkbook
+	}
+	
+	private createDefaultStyles() {
 		createStyle('iso-date').dataFormatString = 'yyyy/mm/dd'
 		createStyle('iso-datetime').dataFormatString = 'yyyy/mm/dd hh:mm:ss'
 		createStyle('euro-date').dataFormatString = 'dd/mm/yyyy'
@@ -68,7 +81,8 @@ class ExcelBuilder extends BuilderSupport {
 		createStyle('us-datetime').dataFormatString = 'mm/dd/yyyy hh:mm:ss'
 		styles['default-date'] = styles['iso-datetime']
 		CellStyle base = CellStyleEnhancer.enhance(workbook.getCellStyleAt(0 as short), workbook)
-		styles['default-numeric'] = styles['default-text'] = styles['default-boolean'] = base	}
+		styles['default-numeric'] = styles['default-text'] = styles['default-boolean'] = base
+	}
 	
 	@Override
 	protected void setParent(Object parent, Object child) {

@@ -971,6 +971,12 @@ class ExcelBuilderTest {
 	}
 	
 	@Test
+	public void sheetsInTemplateShouldAppearInBuilderSheetsProperty() {
+		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
+		assert builder.sheets['Data']?.sheetName == 'Data'
+	}
+	
+	@Test
 	public void newlyGeneratedSheetNamesShouldBeUnique() {
 		builder = new ExcelBuilder(TEMPLATE_FILE_NAME)
 		Sheet data
