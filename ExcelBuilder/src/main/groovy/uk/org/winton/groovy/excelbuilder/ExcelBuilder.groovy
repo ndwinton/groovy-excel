@@ -44,7 +44,7 @@ class ExcelBuilder extends BuilderSupport {
 	private int nextColNum = 0
 	
 	ExcelBuilder() {
-		this(null)
+		this((File)null)
 	}
 
 	ExcelBuilder(String templateFileName) {
@@ -362,9 +362,7 @@ class ExcelBuilder extends BuilderSupport {
 	
 	private void applyStyles(entity, styleNameList) {
 		if (styleNameList != null) {
-			if (!styleNameList.respondsTo('join')) {
-				styleNameList = [styleNameList]
-			}
+            styleNameList = ensureStyleNameListIsAList(styleNameList)
 			def name = styleNameList.join('+')
 			if (styles[name] == null) {
 				def styleList = []
@@ -390,6 +388,19 @@ class ExcelBuilder extends BuilderSupport {
 		}
 	}
 	
+	private def List ensureStyleNameListIsAList(styleNameList) {
+		switch (styleNameList) {
+		case String:
+			return [styleNameList]
+
+		case List:
+		return styleNameList
+
+		default:
+			throw new IllegalArgumentException("style list must be a string or list")
+		}
+	}
+
 	private def findStyle(style) {
 		styles.findResult { k, v -> v == style ? k : null }
 	}
